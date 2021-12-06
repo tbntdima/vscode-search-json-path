@@ -31,15 +31,17 @@ let inputBox, quickPick;
 
 function search(path) {
   let pathArray = path.split(".");
-  vscode.workspace.findFiles("**/*.json", "**/node_modules/").then((files) => {
-    Promise.all(files.map((file) => searchPathInJson(pathArray, file))).then(
-      (filesFound) =>
-        showQuickPick(
-          path,
-          filesFound.filter((fileFound) => fileFound)
-        )
-    );
-  });
+  vscode.workspace
+    .findFiles("**/*.json", "{**/dist/**,**/node_modules/**}")
+    .then((files) => {
+      Promise.all(files.map((file) => searchPathInJson(pathArray, file))).then(
+        (filesFound) =>
+          showQuickPick(
+            path,
+            filesFound.filter((fileFound) => fileFound)
+          )
+      );
+    });
 }
 
 function showQuickPick(path, filesFound) {
@@ -48,13 +50,15 @@ function showQuickPick(path, filesFound) {
   quickPick.canSelectMany = false;
   quickPick.title = "Insert the desired JSON path";
   if (filesFound) {
-    quickPick.canSelectMany = filesFound.length > 1;
+    // quickPick.canSelectMany = filesFound.length > 1;
     quickPick.title = `${filesFound.length} file(s) found containing the path: ${path}`;
     quickPick.items = filesFound
       .filter((fileFound) => fileFound)
       .map((fileFound) => ({
         label: fileFound.json.path.split("/").slice(-1)[0],
-        description: fileFound.json.path,
+        description: fileFound.json.path.search("client/")
+          ? fileFound.json.path.slice(fileFound.json.path.search("client/"))
+          : fileFound.json.path,
         file: fileFound.json,
       }));
   }
